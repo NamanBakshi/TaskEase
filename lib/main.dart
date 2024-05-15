@@ -1,12 +1,17 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo/components/home.dart';
 import 'package:todo/model/task.dart';
+import 'firebase_options.dart';
 
 
 void main() async {
-  //WidgetsFlutterBinding.ensureInitialized();
   //final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   await Hive.initFlutter();
   // Register the generated adapter
