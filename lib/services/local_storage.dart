@@ -29,7 +29,7 @@ class LocalStorage {
   }
 
   deleteBox() async {
-    var box = await Hive.openBox('tBox');
+    var box = await Hive.openBox('tBox') ;
     box.delete('allTasks');
     box.close();
   }
