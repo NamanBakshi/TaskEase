@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "679840094288",
+    "project_id": "taskease-bd747",
+    "storage_bucket": "taskease-bd747.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679840094288:android:afc21edf90cdb6882f9955",
+        "android_client_info": {
+          "package_name": "com.example.todo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP7VGe1vRO-KVRBiFvcwDq1ZcdnzqooUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
