@@ -64,10 +64,11 @@ class _HomeState extends State<Home> {
                       value: boxTitle == Constants().add
                           ? Constants().add
                           : 'Edit',
+                      isEnabled: true,
                       pressed: boxTitle == Constants().add
                           ? onAdd
                           : () => onEditClick(index!)),
-                  Button(value: 'Cancel', pressed: onCancel),
+                  Button(value: 'Cancel', isEnabled: true ,pressed: onCancel),
                 ],
               ),
             ],
@@ -176,13 +177,25 @@ class _HomeState extends State<Home> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {
-          addTask(Constants().add),
-          //getTasks()
-          //fetchData()
+      floatingActionButton: FloatingActionButton.extended(heroTag: const {
+        // onPressed: () =>
+        // {
+        //   addTask(Constants().add),
+        //   //getTasks()
+        //   //fetchData()
+        // },
+        //child: const Icon(Icons.add),
+      }, onPressed: () {
+        addTask(
+            Constants().add);
         },
-        child: const Icon(Icons.add),
+        label: const Row(
+          children: [
+            Icon(Icons.add),
+            SizedBox(width:10),
+            Text('Add Task')
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
