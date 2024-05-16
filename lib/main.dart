@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo/components/home.dart';
 import 'package:todo/model/task.dart';
+import 'package:todo/pages/signup.dart';
 import 'firebase_options.dart';
 
 
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-      home: const Home(),
+      home: const Signup(),
+      //Home(),
     );
   }
 }

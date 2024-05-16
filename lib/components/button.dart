@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class Button extends StatelessWidget {
   final String value;
+  final bool isEnabled;
   VoidCallback pressed;
 
   Button({
     super.key,
     required this.value,
     required this.pressed,
+    required this.isEnabled
   });
 
   @override
@@ -22,7 +24,7 @@ class Button extends StatelessWidget {
              borderRadius: BorderRadius.circular(5.0),
            ),
          ),
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.lightBlueAccent),
+          backgroundColor: MaterialStateProperty.all<Color>(isEnabled ? Colors.lightBlueAccent : Colors.grey),
           // side:BorderSide(style:BorderStyle),
         ),
         child: Text(
