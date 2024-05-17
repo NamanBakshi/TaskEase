@@ -1,10 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:todo/components/button.dart';
 import 'package:todo/components/todoTile.dart';
 import 'package:todo/model/task.dart';
+import 'package:todo/services/firestore.dart';
 import 'package:todo/services/local_storage.dart';
 import 'package:todo/utils/constants.dart';
+import 'package:uuid/uuid.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -17,11 +21,18 @@ class _HomeState extends State<Home> {
 
   dynamic dataFromDb;
   List<Task>? updatedTaskList = [];
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
     _savedData();
+    //final variable =_firestore.collection('tasks').doc(_auth.currentUser?.uid);
+    //print('user tasks = $variable');
+
+
+
   }
 
   _savedData() async {
@@ -31,6 +42,7 @@ class _HomeState extends State<Home> {
     setState(() {
       updatedTaskList = tList;
     });
+
   }
 
   String taskName = '';
@@ -75,7 +87,7 @@ class _HomeState extends State<Home> {
           ),
         ),
       ),
-    ).whenComplete(() => {myController.clear()});
+    );
   }
 
   onAdd() async {
@@ -86,6 +98,8 @@ class _HomeState extends State<Home> {
         id: (length + 1).toString(),
         title: myController.text,
         isChecked: false);
+
+    Firestore().addTask(myController.text);
 
     setState(() {
       updatedTaskList?.add(newTask);
@@ -142,9 +156,24 @@ class _HomeState extends State<Home> {
     Navigator.of(context).pop();
   }
 
+   _getAllTasks(dynamic snapshot) async {
+     var dbList= await Firestore().getTasks(snapshot) ;
+     List<Task> newList=[];
+
+    print('data $dbList');
+
+    for(Task t in dbList){
+      newList.add(t);
+    }
+    setState(() {
+    updatedTaskList=newList;
+     });
+    //return data;
+  }
+
   @override
   void dispose() {
-    // TODO: implement dispose
+
     myController.dispose();
     super.dispose();
   }
@@ -165,18 +194,46 @@ class _HomeState extends State<Home> {
                 style: TextStyle(fontSize: 16),
               ),
             )
-          : ListView.builder(
-              itemCount: updatedTaskList?.length,
-              itemBuilder: (context, index) {
-                return TodoTile(
-                  taskName: updatedTaskList![index].title,
-                  checked: updatedTaskList![index].isChecked,
-                  onClick: (val) => checkBoxClicked(val, index),
-                  onDelete: (context) => onDelete(index),
-                  onEdit: (context) => onEdit('Edit', index),
-                );
-              },
-            ),
+          : StreamBuilder<QuerySnapshot>(
+            stream: Firestore().stream(),
+            builder: (context, snapshot) {
+              //List<Task?> allTasks;
+              if(!snapshot.hasData){
+                return const CircularProgressIndicator();
+              }else{
+                //List<Task>? dbList =
+                _getAllTasks(snapshot);
+                //List<Task>? newList=[];
+
+              }
+              //var allTasks = Firestore().getTasks(snapshot);
+
+              return ListView.builder(
+                itemCount: updatedTaskList?.length,
+                itemBuilder: (context, index) {
+                  return TodoTile(
+                    taskName: updatedTaskList![index].title,
+                    checked: updatedTaskList![index].isChecked,
+                    onClick: (val) => checkBoxClicked(val, index),
+                    onDelete: (context) => onDelete(index),
+                    onEdit: (context) => onEdit('Edit', index),
+                  );
+                },
+              );
+                // ListView.builder(
+                //   //itemCount: updatedTaskList?.length,
+                //   itemBuilder: (context, index) {
+                //     return TodoTile(
+                //       taskName: updatedTaskList![index].title,
+                //       checked: updatedTaskList![index].isChecked,
+                //       onClick: (val) => checkBoxClicked(val, index),
+                //       onDelete: (context) => onDelete(index),
+                //       onEdit: (context) => onEdit('Edit', index),
+                //     );
+                //   },
+                // );
+            }
+          ),
       floatingActionButton: FloatingActionButton.extended(heroTag: const {
         // onPressed: () =>
         // {

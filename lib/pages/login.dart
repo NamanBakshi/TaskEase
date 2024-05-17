@@ -48,8 +48,8 @@ class _LoginState extends State<Login> {
   _loginUser() async {
     final user = await _auth.loginUser(_email, _password);
     print('user = $user');
-    if(user != null){
-      print('user created successfully');
+    if(user){
+      print('user loggedIn successfully');
       goToHome(context);
     }
   }
@@ -80,6 +80,12 @@ class _LoginState extends State<Login> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'Email',
+              focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Colors.lightBlueAccent,
+                    width: 2.0,
+                  )
+              ),
             ),
             onChanged: (newValue) {
               setState(() {
@@ -95,6 +101,12 @@ class _LoginState extends State<Login> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'Password',
+              focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Colors.lightBlueAccent,
+                    width: 2.0,
+                  )
+              ),
             ),
             onChanged: (newValue) {
               setState(() {
