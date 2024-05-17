@@ -50,9 +50,9 @@ class _SignupState extends State<Signup> {
   );
 
   _signupUser() async {
-      final user = await _auth.signupUser(_name, _email, _password);
-      print('user = $user');
-      if(user != null){
+      final user = await _auth.signupUser(_email, _password);
+      print('res after signup = $user');
+      if(user){
         print('user created successfully');
         goToHome(context);
       }
@@ -63,6 +63,7 @@ class _SignupState extends State<Signup> {
     return Scaffold(
         body: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
+          //MediaQuery.of(context).size.width > 768
       child: Column(children: [
         //const Spacer(),
         const SizedBox(
@@ -85,6 +86,13 @@ class _SignupState extends State<Signup> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Name',
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.lightBlueAccent,
+                width: 2.0,
+              )
+            ),
+
           ),
           onChanged: (newValue) {
             setState(() {
@@ -100,6 +108,12 @@ class _SignupState extends State<Signup> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Email',
+            focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Colors.lightBlueAccent,
+                  width: 2.0,
+                )
+            ),
           ),
           onChanged: (newValue) {
             setState(() {
@@ -115,6 +129,12 @@ class _SignupState extends State<Signup> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Password',
+            focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Colors.lightBlueAccent,
+                  width: 2.0,
+                )
+            ),
           ),
           onChanged: (newValue) {
             setState(() {
