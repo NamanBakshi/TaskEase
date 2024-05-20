@@ -5,10 +5,12 @@ import 'package:hive/hive.dart';
 import 'package:todo/components/button.dart';
 import 'package:todo/components/todoTile.dart';
 import 'package:todo/model/task.dart';
+import 'package:todo/services/auth_service.dart';
 import 'package:todo/services/firestore.dart';
 import 'package:todo/services/local_storage.dart';
 import 'package:todo/utils/constants.dart';
-import 'package:uuid/uuid.dart';
+
+import '../pages/login.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -18,31 +20,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   dynamic dataFromDb;
   List<Task>? updatedTaskList = [];
+  late Stream<QuerySnapshot> userData;
   final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
+  final _userAuth = AuthService();
 
   @override
   void initState() {
     super.initState();
     _savedData();
-    //final variable =_firestore.collection('tasks').doc(_auth.currentUser?.uid);
-    //print('user tasks = $variable');
-
-
-
+    _getUserDataOnLoad();
   }
 
   _savedData() async {
     var tList = await LocalStorage().getBoxData() ?? [];
-    print("tList List :: ${tList}");
+    //print("tList List :: ${tList}");
 
     setState(() {
       updatedTaskList = tList;
     });
-
   }
 
   String taskName = '';
@@ -80,7 +77,7 @@ class _HomeState extends State<Home> {
                       pressed: boxTitle == Constants().add
                           ? onAdd
                           : () => onEditClick(index!)),
-                  Button(value: 'Cancel', isEnabled: true ,pressed: onCancel),
+                  Button(value: 'Cancel', isEnabled: true, pressed: onCancel),
                 ],
               ),
             ],
@@ -91,7 +88,6 @@ class _HomeState extends State<Home> {
   }
 
   onAdd() async {
-
     var length = updatedTaskList?.length ?? 0;
 
     Task newTask = Task(
@@ -120,60 +116,83 @@ class _HomeState extends State<Home> {
 
   void checkBoxClicked(bool? val, int index) async {
     //print('index = $index');
-    var updatedData=await LocalStorage().updateCheckbox(index);
+    var updatedData = await LocalStorage().updateCheckbox(index);
 
     setState(() {
-      updatedTaskList= updatedData;
+      updatedTaskList = updatedData;
     });
-
   }
 
   void onDelete(int index) async {
-    var updatedData=await LocalStorage().deleteTask(index);
+    var updatedData = await LocalStorage().deleteTask(index);
 
     setState(() {
-      updatedTaskList=updatedData;
+      updatedTaskList = updatedData;
     });
   }
 
   void onEdit(String str, int index) async {
-
     setState(() {
-      myController.text =  updatedTaskList![index].title;
+      myController.text = updatedTaskList![index].title;
     });
 
     addTask(str, index: index);
   }
 
   void onEditClick(int index) async {
-
     var tList = await LocalStorage().editTask(index, myController.text);
     setState(() {
-      updatedTaskList=tList;
+      updatedTaskList = tList;
     });
 
     myController.clear();
     Navigator.of(context).pop();
   }
 
-   _getAllTasks(dynamic snapshot) async {
-     var dbList= await Firestore().getTasks(snapshot) ;
-     List<Task> newList=[];
-
-    print('data $dbList');
-
-    for(Task t in dbList){
-      newList.add(t);
-    }
-    setState(() {
-    updatedTaskList=newList;
-     });
-    //return data;
+  _getUserDataOnLoad() async {
+    userData = Firestore().getData();
+    print('usersss === $userData');
+    // setState(() {
+    //
+    // });
   }
+
+  Widget dropdown() {
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.person),
+      onSelected: (String result) {
+        // Handle the selected menu item
+        print(result);
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'Profile',
+          child: Text('Profile'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'Settings',
+          child: Text('Settings'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'Logout',
+          child: Text('Logout'),
+        ),
+      ],
+    );
+  }
+
+  goToLogin(BuildContext context) async => {
+
+        if (await _userAuth.logoutUser())
+          {
+            print(_auth.currentUser?.uid),
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const Login())),
+          },
+      };
 
   @override
   void dispose() {
-
     myController.dispose();
     super.dispose();
   }
@@ -182,76 +201,72 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.lightBlueAccent,
-        title: const Text('TaskEase'),
-        elevation: 10,
-      ),
-      body: updatedTaskList!.isEmpty
-          ? const Center(
-              child: Text(
-                'No pending tasks',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
-            )
-          : StreamBuilder<QuerySnapshot>(
-            stream: Firestore().stream(),
-            builder: (context, snapshot) {
-              //List<Task?> allTasks;
-              if(!snapshot.hasData){
-                return const CircularProgressIndicator();
-              }else{
-                //List<Task>? dbList =
-                _getAllTasks(snapshot);
-                //List<Task>? newList=[];
-
-              }
-              //var allTasks = Firestore().getTasks(snapshot);
-
-              return ListView.builder(
-                itemCount: updatedTaskList?.length,
-                itemBuilder: (context, index) {
-                  return TodoTile(
-                    taskName: updatedTaskList![index].title,
-                    checked: updatedTaskList![index].isChecked,
-                    onClick: (val) => checkBoxClicked(val, index),
-                    onDelete: (context) => onDelete(index),
-                    onEdit: (context) => onEdit('Edit', index),
-                  );
+          backgroundColor: Colors.lightBlueAccent,
+          title: const Text('TaskEase'),
+          elevation: 10,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 30),
+              child: PopupMenuButton<String>(
+                icon: const Icon(Icons.person),
+                onSelected: (String result) {
+                  // Handle the selected menu item
+                  switch (result) {
+                    case 'Profile':
+                      print('profile clicked');
+                      break;
+                    case 'Settings':
+                      print('settings clicked');
+                      break;
+                    case 'Logout':
+                      goToLogin(context);
+                      break;
+                    default:
+                  }
+                  print(result);
                 },
-              );
-                // ListView.builder(
-                //   //itemCount: updatedTaskList?.length,
-                //   itemBuilder: (context, index) {
-                //     return TodoTile(
-                //       taskName: updatedTaskList![index].title,
-                //       checked: updatedTaskList![index].isChecked,
-                //       onClick: (val) => checkBoxClicked(val, index),
-                //       onDelete: (context) => onDelete(index),
-                //       onEdit: (context) => onEdit('Edit', index),
-                //     );
-                //   },
-                // );
-            }
-          ),
-      floatingActionButton: FloatingActionButton.extended(heroTag: const {
-        // onPressed: () =>
-        // {
-        //   addTask(Constants().add),
-        //   //getTasks()
-        //   //fetchData()
-        // },
-        //child: const Icon(Icons.add),
-      }, onPressed: () {
-        addTask(
-            Constants().add);
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'Profile',
+                    child: Text('Profile'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Settings',
+                    child: Text('Settings'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Logout',
+                    child: Text('Logout'),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+      body: StreamBuilder(
+          stream: userData,
+          builder: (context, AsyncSnapshot snapshot) {
+            return snapshot.hasData
+                ? ListView.builder(
+                    itemCount: snapshot.data.docs.length,
+                    itemBuilder: (context, index) {
+                      DocumentSnapshot ds = snapshot.data.docs[index];
+                      return TodoTile(
+                        taskName: ds['title'],
+                        checked: ds['isChecked'],
+                        onClick: (val) => checkBoxClicked(val, index),
+                        onDelete: (context) => onDelete(index),
+                        onEdit: (context) => onEdit('Edit', index),
+                      );
+                    },
+                  )
+                : const Text('no data found');
+          }),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          addTask(Constants().add);
         },
         label: const Row(
-          children: [
-            Icon(Icons.add),
-            SizedBox(width:10),
-            Text('Add Task')
-          ],
+          children: [Icon(Icons.add), SizedBox(width: 10), Text('Add Task')],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

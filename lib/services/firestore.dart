@@ -13,7 +13,6 @@ class Firestore{
     try {
       await _firestore
           .collection('users')
-          //.doc(_auth.currentUser!.uid)
           .doc(uid)
           .set({"email": email});
       return true;
@@ -38,7 +37,6 @@ class Firestore{
         'title': title,
         'isChecked': false,
         'time': dateTime,
-
       });
       return true;
     } catch (e) {
@@ -66,13 +64,33 @@ class Firestore{
   }
 
 
-  Stream<QuerySnapshot> stream() {
+  // Stream<QuerySnapshot> stream() {
+  //   return _firestore
+  //       .collection('users')
+  //       .doc(_auth.currentUser!.uid)
+  //       .collection('tasks')
+  //       //.where('isDon', isEqualTo: isDone)
+  //       .snapshots();
+  // }
+
+  Stream<QuerySnapshot> getData() {
+    //return FirebaseFirestore.instance.collection('users').snapshots();
+
+    final String? userId = _auth.currentUser?.uid;
+
+    // Check if the user is authenticated
+    if (userId == null) {
+     // throw Exception('User not authenticated');
+      print('user not authenticated ');
+    }
+
+    // Return a stream of tasks collection for the authenticated user
     return _firestore
         .collection('users')
-        .doc(_auth.currentUser!.uid)
+        .doc(userId)
         .collection('tasks')
-        //.where('isDon', isEqualTo: isDone)
         .snapshots();
+
   }
 
 }

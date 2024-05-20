@@ -41,11 +41,19 @@ class AuthService {
   }
 
   //firebase logs out current user
-  Future<void> logoutUser() async {
+  Future<bool> logoutUser() async {
     try {
       await _authInstance.signOut();
+
+      if(_authInstance.currentUser?.uid == null) {
+        print('user logged out successfully ');
+        return true;
+      }else {
+        return false;
+      }
     } catch (err) {
       print('err while logout = $err');
+      return false;
     }
   }
 
