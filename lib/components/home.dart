@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:todo/components/button.dart';
 import 'package:todo/components/todoTile.dart';
@@ -22,7 +23,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   dynamic dataFromDb;
   List<Task>? updatedTaskList = [];
-  late Stream<QuerySnapshot> userData;
+  late Stream<QuerySnapshot>? userData;
   final _auth = FirebaseAuth.instance;
   final _userAuth = AuthService();
 
@@ -33,19 +34,32 @@ class _HomeState extends State<Home> {
     _getUserDataOnLoad();
   }
 
-  _savedData() async {
-    var tList = await LocalStorage().getBoxData() ?? [];
-    //print("tList List :: ${tList}");
+  _getUserDataOnLoad() async {
+    userData = Firestore().getData();
+    if(userData == null){
+      //show popup saying unauthorized user
+    }
+    print('usersss === $userData');
 
     setState(() {
-      updatedTaskList = tList;
+
     });
+  }
+
+  _savedData() async {
+    //var tList = await LocalStorage().getBoxData() ?? [];
+    //print("tList List :: ${tList}");
+
+    // setState(() {
+    //   updatedTaskList = tList;
+    // });
   }
 
   String taskName = '';
   final TextEditingController myController = TextEditingController();
 
-  addTask(String boxTitle, {int? index}) {
+  addTask(String boxTitle ,{Task? taskDetails,int? index,String? id}) {
+    //print('addtASK after edit index = $index , id = $id');
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -76,7 +90,7 @@ class _HomeState extends State<Home> {
                       isEnabled: true,
                       pressed: boxTitle == Constants().add
                           ? onAdd
-                          : () => onEditClick(index!)),
+                          : () => onEditClick(index!,id!,taskDetails!)),
                   Button(value: 'Cancel', isEnabled: true, pressed: onCancel),
                 ],
               ),
@@ -97,15 +111,13 @@ class _HomeState extends State<Home> {
 
     Firestore().addTask(myController.text);
 
-    setState(() {
-      updatedTaskList?.add(newTask);
-      myController.clear();
-    });
+    // setState(() {
+    //   updatedTaskList?.add(newTask);
+    //   myController.clear();
+    // });
 
     LocalStorage().saveTask(updatedTaskList!);
-
-    int? len = updatedTaskList?.length;
-    print('total tasks = $len');
+    myController.clear();
     Navigator.of(context).pop();
   }
 
@@ -114,78 +126,72 @@ class _HomeState extends State<Home> {
     Navigator.of(context).pop();
   }
 
-  void checkBoxClicked(bool? val, int index) async {
+  void checkBoxClicked(bool? val, int index,String id,Task taskDetails) async {
     //print('index = $index');
-    var updatedData = await LocalStorage().updateCheckbox(index);
+    //var updatedData = await LocalStorage().updateCheckbox(index);
 
-    setState(() {
-      updatedTaskList = updatedData;
-    });
-  }
-
-  void onDelete(int index) async {
-    var updatedData = await LocalStorage().deleteTask(index);
-
-    setState(() {
-      updatedTaskList = updatedData;
-    });
-  }
-
-  void onEdit(String str, int index) async {
-    setState(() {
-      myController.text = updatedTaskList![index].title;
-    });
-
-    addTask(str, index: index);
-  }
-
-  void onEditClick(int index) async {
-    var tList = await LocalStorage().editTask(index, myController.text);
-    setState(() {
-      updatedTaskList = tList;
-    });
-
-    myController.clear();
-    Navigator.of(context).pop();
-  }
-
-  _getUserDataOnLoad() async {
-    userData = Firestore().getData();
-    print('usersss === $userData');
     // setState(() {
-    //
+    //   updatedTaskList = updatedData;
     // });
+    taskDetails.isChecked = !taskDetails.isChecked;
+    Firestore().clickOnTask(id, taskDetails).then((value) =>
+      print('checkbox having id = $id is clicked ')
+    );
   }
 
-  Widget dropdown() {
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.person),
-      onSelected: (String result) {
-        // Handle the selected menu item
-        print(result);
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
-          value: 'Profile',
-          child: Text('Profile'),
-        ),
-        const PopupMenuItem<String>(
-          value: 'Settings',
-          child: Text('Settings'),
-        ),
-        const PopupMenuItem<String>(
-          value: 'Logout',
-          child: Text('Logout'),
-        ),
-      ],
+  void onDelete(int index,String id) async {
+    //var updatedData = await LocalStorage().deleteTask(index);
+
+    // setState(() {
+    //   updatedTaskList = updatedData;
+    // });
+
+    await Firestore().deleteTaskFromDb(id)
+        .then((value) =>
+        Fluttertoast.showToast(
+            msg: "Task deleted successfully",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.blue,
+            textColor: Colors.white,
+            fontSize: 16.0
+        )
     );
+  }
+
+  void onEdit(String str, int index,String id,String title,Task taskDetails) async {
+    setState(() {
+      //myController.text = updatedTaskList![index].title;
+      myController.text = title;
+    });
+
+    addTask(str,taskDetails:taskDetails ,index: index,id:id);
+  }
+
+  onEditClick(int index,String id,Task taskDetails) async {
+      print('onedit cliecked call ');
+    try {
+      //var tList = await LocalStorage().editTask(index, myController.text);
+      // setState(() {
+      //   updatedTaskList = tList;
+      // });
+      taskDetails.title = myController.text;
+      await Firestore().editTaskInDb(id, taskDetails).then((value) => {
+          myController.clear(),
+          Navigator.of(context).pop(),
+      });
+
+    }catch(err){
+      print('error while updating task = $err');
+    }
   }
 
   goToLogin(BuildContext context) async => {
 
         if (await _userAuth.logoutUser())
           {
-            print(_auth.currentUser?.uid),
+            print(' user there? =  $_auth.currentUser?.uid'),
             Navigator.push(context,
                 MaterialPageRoute(builder: (context) => const Login())),
           },
@@ -223,7 +229,7 @@ class _HomeState extends State<Home> {
                       break;
                     default:
                   }
-                  print(result);
+                  //print(result);
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   const PopupMenuItem<String>(
@@ -245,20 +251,48 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
           stream: userData,
           builder: (context, AsyncSnapshot snapshot) {
+
+            var tasks;
+            if(snapshot.hasData) {
+              tasks=snapshot.data!.docs.map((DocumentSnapshot document) {
+                // var data =snapshot.data.docs;
+                // print('snapshot data = $data');
+              return Task.fromJson(document.data() as Map<String,dynamic>) ;
+              //return document.data() as Task;
+            }).toList();
+            }
+
             return snapshot.hasData
-                ? ListView.builder(
-                    itemCount: snapshot.data.docs.length,
-                    itemBuilder: (context, index) {
-                      DocumentSnapshot ds = snapshot.data.docs[index];
-                      return TodoTile(
-                        taskName: ds['title'],
-                        checked: ds['isChecked'],
-                        onClick: (val) => checkBoxClicked(val, index),
-                        onDelete: (context) => onDelete(index),
-                        onEdit: (context) => onEdit('Edit', index),
-                      );
-                    },
-                  )
+            //return tasks.length>0
+                ?
+            ListView.builder(
+            itemCount: tasks.length,
+            itemBuilder: (context, index) {
+              Task task = tasks[index];
+              //print('task values - $task');
+              return TodoTile(
+                taskName: task.title,
+                checked: task.isChecked,
+                onClick: (val) => checkBoxClicked(val, index,task.id,task),
+                onDelete: (context) => onDelete(index,task.id),
+                onEdit: (context) => onEdit('Edit', index,task.id,task.title,task),
+              );
+            }
+            )
+
+            // ListView.builder(
+            //         itemCount: snapshot.data.docs.length,
+            //         itemBuilder: (context, index) {
+            //           DocumentSnapshot ds = snapshot.data.docs[index];
+            //           return TodoTile(
+            //             taskName: ds['title'],
+            //             checked: ds['isChecked'],
+            //             onClick: (val) => checkBoxClicked(val, index),
+            //             onDelete: (context) => onDelete(index),
+            //             onEdit: (context) => onEdit('Edit', index,ds['id']),
+            //           );
+            //         },
+            //       )
                 : const Text('no data found');
           }),
       floatingActionButton: FloatingActionButton.extended(

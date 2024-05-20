@@ -4,17 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:todo/model/task.dart';
 import 'package:uuid/uuid.dart';
 
-class Firestore{
-
+class Firestore {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  Future<bool> CreateUser(dynamic uid,String email) async {
+  Future<bool> CreateUser(dynamic uid, String email) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(uid)
-          .set({"email": email});
+      await _firestore.collection('users').doc(uid).set({"email": email});
       return true;
     } catch (e) {
       print(e);
@@ -51,18 +47,15 @@ class Firestore{
       var tasksList = snapshot.data.docs.map((doc) {
         final task = doc.data() as Map<String, dynamic>;
         return Task(
-            id: task['id'],
-            title: task['title'],
-            isChecked: task['isChecked']);
+            id: task['id'], title: task['title'], isChecked: task['isChecked']);
       }).toList();
       print('all task list = $tasksList');
       return tasksList;
-    }catch(err){
+    } catch (err) {
       print('err while getting tasks = $err');
       return [];
     }
   }
-
 
   // Stream<QuerySnapshot> stream() {
   //   return _firestore
@@ -80,7 +73,6 @@ class Firestore{
 
     // Check if the user is authenticated
     if (userId == null) {
-     // throw Exception('User not authenticated');
       print('user not authenticated ');
     }
 
@@ -90,7 +82,34 @@ class Firestore{
         .doc(userId)
         .collection('tasks')
         .snapshots();
-
   }
+
+  Future<void> editTaskInDb (String id,Task taskDetails) async {
+    await _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('tasks')
+        .doc(id)
+        .update(taskDetails.toJson());
+  }
+
+  Future<void> deleteTaskFromDb(String id) async {
+    await _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('tasks')
+        .doc(id)
+        .delete();
+  }
+
+  Future<void> clickOnTask(String id,Task taskDetails) async {
+    await _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('tasks')
+        .doc(id)
+        .update(taskDetails.toJson());
+  }
+
 
 }
