@@ -21,7 +21,7 @@ class Firestore {
   Future<bool> addTask(String title) async {
     try {
       var uuid = const Uuid().v4();
-      DateTime dateTime = DateTime.now();
+      String dateTime = DateTime.now().toString();
 
       await _firestore
           .collection('users')
@@ -41,21 +41,21 @@ class Firestore {
     }
   }
 
-  List<Task> getTasks(AsyncSnapshot snapshot) {
-    try {
-      // check for null todos
-      var tasksList = snapshot.data.docs.map((doc) {
-        final task = doc.data() as Map<String, dynamic>;
-        return Task(
-            id: task['id'], title: task['title'], isChecked: task['isChecked']);
-      }).toList();
-      print('all task list = $tasksList');
-      return tasksList;
-    } catch (err) {
-      print('err while getting tasks = $err');
-      return [];
-    }
-  }
+  // List<Task> getTasks(AsyncSnapshot snapshot) {
+  //   try {
+  //     // check for null todos
+  //     var tasksList = snapshot.data.docs.map((doc) {
+  //       final task = doc.data() as Map<String, dynamic>;
+  //       return Task(
+  //           id: task['id'], title: task['title'], isChecked: task['isChecked']);
+  //     }).toList();
+  //     print('all task list = $tasksList');
+  //     return tasksList;
+  //   } catch (err) {
+  //     print('err while getting tasks = $err');
+  //     return [];
+  //   }
+  // }
 
   // Stream<QuerySnapshot> stream() {
   //   return _firestore
