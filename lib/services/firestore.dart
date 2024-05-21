@@ -18,7 +18,7 @@ class Firestore {
     }
   }
 
-  Future<bool> addTask(String title) async {
+  Future<bool> addTask(String title,String dueDate) async {
     try {
       var uuid = const Uuid().v4();
       String dateTime = DateTime.now().toString();
@@ -33,6 +33,7 @@ class Firestore {
         'title': title,
         'isChecked': false,
         'time': dateTime,
+        'dueDate' : dueDate,
       });
       return true;
     } catch (e) {

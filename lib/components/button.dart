@@ -17,7 +17,7 @@ class Button extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
-        onPressed:pressed,
+        onPressed:isEnabled ? pressed : null,
         style: ButtonStyle(
          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
            RoundedRectangleBorder(

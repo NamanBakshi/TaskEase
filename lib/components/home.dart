@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:todo/components/button.dart';
+import 'package:todo/components/date_picker.dart';
 import 'package:todo/components/todoTile.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/services/auth_service.dart';
@@ -28,6 +29,7 @@ class _HomeState extends State<Home> {
   late Stream<QuerySnapshot>? userData;
   final _auth = FirebaseAuth.instance;
   final _userAuth = AuthService();
+  String? dueDate;
 
   @override
   void initState() {
@@ -59,6 +61,13 @@ class _HomeState extends State<Home> {
 
   String taskName = '';
   final TextEditingController myController = TextEditingController();
+  final TextEditingController dateController = TextEditingController();
+
+  bool _areAllInputsEntered() {
+    bool result=taskName.isNotEmpty && dueDate!.isNotEmpty;
+    print(' result = $result');
+    return taskName.isNotEmpty;
+  }
 
   addTask(String boxTitle, {Task? taskDetails, int? index, String? id}) {
     //print('addtASK after edit index = $index , id = $id');
@@ -70,7 +79,7 @@ class _HomeState extends State<Home> {
           textAlign: TextAlign.center,
         ),
         content: Container(
-          height: 120,
+          height: 220,
           width: 80,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -79,8 +88,53 @@ class _HomeState extends State<Home> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Title',
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                    color: Colors.lightBlueAccent,
+                    width: 2.0,
+                  )),
                 ),
                 controller: myController,
+                onChanged: (newValue) {
+                  setState(() {
+                    taskName = newValue;
+                  });
+                },
+              ),
+              //DatePicker( dueDate: dueDate,),
+              TextFormField(
+                controller: dateController,
+                readOnly: true,
+                onTap: () async {
+                  final selectedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2024),
+                    lastDate: DateTime(2100),
+                  );
+                  var splitDate = selectedDate.toString().split(' ')[0];
+                  setState(() {
+                    dateController.text = splitDate;
+                    dueDate = splitDate;
+                  });
+                  print('duedate = $dueDate');
+                },
+                // onChanged: (newValue) {
+                //   setState(() {
+                //     dueDate = newValue;
+                //   });
+                // },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Due date',
+                  suffixIcon: Icon(Icons.calendar_month_rounded),
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                    color: Colors.lightBlueAccent,
+                    width: 2.0,
+                  )),
+                ),
+                //controller: myController,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -111,7 +165,7 @@ class _HomeState extends State<Home> {
         title: myController.text,
         isChecked: false);
 
-    Firestore().addTask(myController.text);
+    Firestore().addTask(myController.text,dueDate!);
 
     // setState(() {
     //   updatedTaskList?.add(newTask);
@@ -259,11 +313,14 @@ class _HomeState extends State<Home> {
 
             var tasks;
             List<String> taskDate = [];
+            List<String> dueDateList=[];
 
             tasks = snapshot.data!.docs.map((DocumentSnapshot document) {
               var task = document.data() as Map<String, dynamic>;
               List<String> dateTimeParts = task['time'].split(' ');
               taskDate.add(dateTimeParts[0]);
+              dueDateList.add(task['dueDate']);
+              print('task data - - $task');
               return Task.fromJson(document.data() as Map<String, dynamic>);
               //return document.data() as Task;
             }).toList();
@@ -276,6 +333,7 @@ class _HomeState extends State<Home> {
                     taskName: task.title,
                     checked: task.isChecked,
                     createdDate: taskDate[index],
+                    date:dueDateList[index],
                     onClick: (val) =>
                         checkBoxClicked(val, index, task.id, task),
                     onDelete: (context) => onDelete(index, task.id),
@@ -296,3 +354,9 @@ class _HomeState extends State<Home> {
     );
   }
 }
+
+// Widget datePicker() {
+//   return (
+//
+//   );
+// }
