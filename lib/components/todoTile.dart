@@ -9,6 +9,7 @@ class TodoTile extends StatelessWidget {
   final String taskName;
   final bool checked;
   final String createdDate;
+  final String date;
   Function(bool?)? onClick;
   Function(BuildContext)? onDelete;
   Function(BuildContext)? onEdit;
@@ -22,6 +23,7 @@ class TodoTile extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.createdDate,
+    required this.date,
   });
 
   @override
@@ -49,44 +51,56 @@ class TodoTile extends StatelessWidget {
           ],
         ),
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.lightBlueAccent,
             borderRadius: BorderRadius.circular(12),
           ),
           child:
-          Row(children: [
-            Checkbox(
-              value: checked,
-              onChanged: onClick,
-              activeColor: Colors.black,
-              splashRadius: 0,
-            ),
-            const SizedBox(width: 30),
-            Text(
-              taskName,
-              style: TextStyle(
-                fontSize: 16,
-                decoration:
-                    checked ? TextDecoration.lineThrough : TextDecoration.none,
-              ),
-            ),
-            const Spacer(),
-            Column(
-              children: [
-                const Text('Created at :',
-                    style: TextStyle(
-                      fontSize: 14,
-                    )),
+          Column(
+            children: [
+              Row(children: [
+                Checkbox(
+                  value: checked,
+                  onChanged: onClick,
+                  activeColor: Colors.black,
+                  splashRadius: 0,
+                ),
+                const SizedBox(width: 30),
                 Text(
-                  createdDate,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  taskName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    decoration:
+                        checked ? TextDecoration.lineThrough : TextDecoration.none,
                   ),
                 ),
-              ],
-            ),
-          ]),
+                const Spacer(),
+                Column(
+                  children: [
+                    const Text('Created at :',
+                        style: TextStyle(
+                          fontSize: 14,
+                        )),
+                    Text(
+                      createdDate,
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ]),
+               Padding(
+                padding: const EdgeInsets.only(left:8.0),
+                child: Row(
+                  children: [
+                    Text('Due date : $date'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

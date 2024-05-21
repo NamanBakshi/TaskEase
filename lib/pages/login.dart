@@ -123,7 +123,7 @@ class _LoginState extends State<Login> {
               isEnabled: _areAllInputsEntered(),
               pressed: () {
                 _areAllInputsEntered()
-                    ? //print('name= $_name \n email= $_email \n password= $_password')
+                    ?
                     _loginUser()
                     : null;
               }),
