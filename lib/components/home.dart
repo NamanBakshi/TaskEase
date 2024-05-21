@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:todo/components/button.dart';
 import 'package:todo/components/todoTile.dart';
 import 'package:todo/model/task.dart';
@@ -30,20 +32,20 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _savedData();
+    // _savedData();
     _getUserDataOnLoad();
   }
 
-  _getUserDataOnLoad() async {
+  _getUserDataOnLoad() {
     userData = Firestore().getData();
-    if(userData == null){
+    if (userData == null) {
       //show popup saying unauthorized user
     }
     print('usersss === $userData');
 
-    setState(() {
-
-    });
+    // setState(() {
+    //
+    // });
   }
 
   _savedData() async {
@@ -58,7 +60,7 @@ class _HomeState extends State<Home> {
   String taskName = '';
   final TextEditingController myController = TextEditingController();
 
-  addTask(String boxTitle ,{Task? taskDetails,int? index,String? id}) {
+  addTask(String boxTitle, {Task? taskDetails, int? index, String? id}) {
     //print('addtASK after edit index = $index , id = $id');
     showDialog(
       context: context,
@@ -90,7 +92,7 @@ class _HomeState extends State<Home> {
                       isEnabled: true,
                       pressed: boxTitle == Constants().add
                           ? onAdd
-                          : () => onEditClick(index!,id!,taskDetails!)),
+                          : () => onEditClick(index!, id!, taskDetails!)),
                   Button(value: 'Cancel', isEnabled: true, pressed: onCancel),
                 ],
               ),
@@ -126,7 +128,8 @@ class _HomeState extends State<Home> {
     Navigator.of(context).pop();
   }
 
-  void checkBoxClicked(bool? val, int index,String id,Task taskDetails) async {
+  void checkBoxClicked(
+      bool? val, int index, String id, Task taskDetails) async {
     //print('index = $index');
     //var updatedData = await LocalStorage().updateCheckbox(index);
 
@@ -134,43 +137,41 @@ class _HomeState extends State<Home> {
     //   updatedTaskList = updatedData;
     // });
     taskDetails.isChecked = !taskDetails.isChecked;
-    Firestore().clickOnTask(id, taskDetails).then((value) =>
-      print('checkbox having id = $id is clicked ')
-    );
+    Firestore()
+        .clickOnTask(id, taskDetails)
+        .then((value) => print('checkbox having id = $id is clicked '));
   }
 
-  void onDelete(int index,String id) async {
+  void onDelete(int index, String id) async {
     //var updatedData = await LocalStorage().deleteTask(index);
 
     // setState(() {
     //   updatedTaskList = updatedData;
     // });
 
-    await Firestore().deleteTaskFromDb(id)
-        .then((value) =>
+    await Firestore().deleteTaskFromDb(id).then((value) =>
         Fluttertoast.showToast(
             msg: "Task deleted successfully",
             toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
+            gravity: ToastGravity.TOP,
             timeInSecForIosWeb: 1,
             backgroundColor: Colors.blue,
             textColor: Colors.white,
-            fontSize: 16.0
-        )
-    );
+            fontSize: 16.0));
   }
 
-  void onEdit(String str, int index,String id,String title,Task taskDetails) async {
+  void onEdit(
+      String str, int index, String id, String title, Task taskDetails) async {
     setState(() {
       //myController.text = updatedTaskList![index].title;
       myController.text = title;
     });
 
-    addTask(str,taskDetails:taskDetails ,index: index,id:id);
+    addTask(str, taskDetails: taskDetails, index: index, id: id);
   }
 
-  onEditClick(int index,String id,Task taskDetails) async {
-      print('onedit cliecked call ');
+  onEditClick(int index, String id, Task taskDetails) async {
+    //print('onedit cliecked call ');
     try {
       //var tList = await LocalStorage().editTask(index, myController.text);
       // setState(() {
@@ -178,17 +179,15 @@ class _HomeState extends State<Home> {
       // });
       taskDetails.title = myController.text;
       await Firestore().editTaskInDb(id, taskDetails).then((value) => {
-          myController.clear(),
-          Navigator.of(context).pop(),
-      });
-
-    }catch(err){
+            myController.clear(),
+            Navigator.of(context).pop(),
+          });
+    } catch (err) {
       print('error while updating task = $err');
     }
   }
 
   goToLogin(BuildContext context) async => {
-
         if (await _userAuth.logoutUser())
           {
             print(' user there? =  $_auth.currentUser?.uid'),
@@ -210,6 +209,7 @@ class _HomeState extends State<Home> {
           backgroundColor: Colors.lightBlueAccent,
           title: const Text('TaskEase'),
           elevation: 10,
+          automaticallyImplyLeading: false,
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 30),
@@ -220,9 +220,6 @@ class _HomeState extends State<Home> {
                   switch (result) {
                     case 'Profile':
                       print('profile clicked');
-                      break;
-                    case 'Settings':
-                      print('settings clicked');
                       break;
                     case 'Logout':
                       goToLogin(context);
@@ -237,10 +234,6 @@ class _HomeState extends State<Home> {
                     child: Text('Profile'),
                   ),
                   const PopupMenuItem<String>(
-                    value: 'Settings',
-                    child: Text('Settings'),
-                  ),
-                  const PopupMenuItem<String>(
                     value: 'Logout',
                     child: Text('Logout'),
                   ),
@@ -251,49 +244,45 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
           stream: userData,
           builder: (context, AsyncSnapshot snapshot) {
-
-            var tasks;
-            if(snapshot.hasData) {
-              tasks=snapshot.data!.docs.map((DocumentSnapshot document) {
-                // var data =snapshot.data.docs;
-                // print('snapshot data = $data');
-              return Task.fromJson(document.data() as Map<String,dynamic>) ;
-              //return document.data() as Task;
-            }).toList();
-            }
-
-            return snapshot.hasData
-            //return tasks.length>0
-                ?
-            ListView.builder(
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              Task task = tasks[index];
-              //print('task values - $task');
-              return TodoTile(
-                taskName: task.title,
-                checked: task.isChecked,
-                onClick: (val) => checkBoxClicked(val, index,task.id,task),
-                onDelete: (context) => onDelete(index,task.id),
-                onEdit: (context) => onEdit('Edit', index,task.id,task.title,task),
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: LoadingAnimationWidget.fourRotatingDots(
+                  color: Colors.blue,
+                  size: 50,
+                ),
               );
             }
-            )
 
-            // ListView.builder(
-            //         itemCount: snapshot.data.docs.length,
-            //         itemBuilder: (context, index) {
-            //           DocumentSnapshot ds = snapshot.data.docs[index];
-            //           return TodoTile(
-            //             taskName: ds['title'],
-            //             checked: ds['isChecked'],
-            //             onClick: (val) => checkBoxClicked(val, index),
-            //             onDelete: (context) => onDelete(index),
-            //             onEdit: (context) => onEdit('Edit', index,ds['id']),
-            //           );
-            //         },
-            //       )
-                : const Text('no data found');
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text('No tasks pending.'));
+            }
+
+            var tasks;
+            List<String> taskDate = [];
+
+            tasks = snapshot.data!.docs.map((DocumentSnapshot document) {
+              var task = document.data() as Map<String, dynamic>;
+              List<String> dateTimeParts = task['time'].split(' ');
+              taskDate.add(dateTimeParts[0]);
+              return Task.fromJson(document.data() as Map<String, dynamic>);
+              //return document.data() as Task;
+            }).toList();
+
+            return ListView.builder(
+                itemCount: tasks.length,
+                itemBuilder: (context, index) {
+                  Task task = tasks[index];
+                  return TodoTile(
+                    taskName: task.title,
+                    checked: task.isChecked,
+                    createdDate: taskDate[index],
+                    onClick: (val) =>
+                        checkBoxClicked(val, index, task.id, task),
+                    onDelete: (context) => onDelete(index, task.id),
+                    onEdit: (context) =>
+                        onEdit('Edit', index, task.id, task.title, task),
+                  );
+                });
           }),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

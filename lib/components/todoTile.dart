@@ -3,9 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
+import '../model/task.dart';
+
 class TodoTile extends StatelessWidget {
   final String taskName;
   final bool checked;
+  final String createdDate;
   Function(bool?)? onClick;
   Function(BuildContext)? onDelete;
   Function(BuildContext)? onEdit;
@@ -18,9 +21,8 @@ class TodoTile extends StatelessWidget {
     required this.onClick,
     required this.onEdit,
     required this.onDelete,
-
+    required this.createdDate,
   });
-
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,6 @@ class TodoTile extends StatelessWidget {
               icon: Icons.delete,
               borderRadius: BorderRadius.circular(12),
             ),
-
           ],
         ),
         child: Container(
@@ -53,7 +54,8 @@ class TodoTile extends StatelessWidget {
             color: Colors.lightBlueAccent,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(children: [
+          child:
+          Row(children: [
             Checkbox(
               value: checked,
               onChanged: onClick,
@@ -68,6 +70,21 @@ class TodoTile extends StatelessWidget {
                 decoration:
                     checked ? TextDecoration.lineThrough : TextDecoration.none,
               ),
+            ),
+            const Spacer(),
+            Column(
+              children: [
+                const Text('Created at :',
+                    style: TextStyle(
+                      fontSize: 14,
+                    )),
+                Text(
+                  createdDate,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ]),
         ),
