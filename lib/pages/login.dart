@@ -13,7 +13,6 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-
   final _auth = AuthService();
 
   TextEditingController emailController = TextEditingController();
@@ -34,21 +33,15 @@ class _LoginState extends State<Login> {
   }
 
   goToSignup(BuildContext context) => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const Signup() )
-  );
+      context, MaterialPageRoute(builder: (context) => const Signup()));
 
   goToHome(BuildContext context) => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context)=> const Home())
-  );
+      context, MaterialPageRoute(builder: (context) => const Home()));
 
   _loginUser() async {
     final user = await _auth.loginUser(_email, _password);
     print('user = $user');
-    if(user){
+    if (user) {
       print('user loggedIn successfully');
       goToHome(context);
     }
@@ -56,8 +49,8 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
+    Widget buildContent() {
+      return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25),
         child: Column(children: [
           //const Spacer(),
@@ -82,10 +75,9 @@ class _LoginState extends State<Login> {
               labelText: 'Email',
               focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Colors.lightBlueAccent,
-                    width: 2.0,
-                  )
-              ),
+                color: Colors.lightBlueAccent,
+                width: 2.0,
+              )),
             ),
             onChanged: (newValue) {
               setState(() {
@@ -103,10 +95,9 @@ class _LoginState extends State<Login> {
               labelText: 'Password',
               focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Colors.lightBlueAccent,
-                    width: 2.0,
-                  )
-              ),
+                color: Colors.lightBlueAccent,
+                width: 2.0,
+              )),
             ),
             onChanged: (newValue) {
               setState(() {
@@ -122,10 +113,7 @@ class _LoginState extends State<Login> {
               value: 'Login',
               isEnabled: _areAllInputsEntered(),
               pressed: () {
-                _areAllInputsEntered()
-                    ?
-                    _loginUser()
-                    : null;
+                _areAllInputsEntered() ? _loginUser() : null;
               }),
           const SizedBox(
             height: 10,
@@ -138,7 +126,27 @@ class _LoginState extends State<Login> {
             )
           ]),
         ]),
-      ),
-    );
+      );
+    }
+
+    return Scaffold(
+        body: Center(
+      child: MediaQuery.of(context).size.width > 768
+          ? Container(
+              height: 600,
+              width: 400,
+              decoration: BoxDecoration(
+                color: Colors.lightBlue[50],
+                border: Border.all(
+                  color: Colors.lightBlueAccent, // Border color
+                  width: 2.0, // Border width
+                ),
+                borderRadius:
+                    BorderRadius.circular(10), // Optional: Rounded corners
+              ),
+              child: buildContent(),
+            )
+          : buildContent(),
+    ));
   }
 }

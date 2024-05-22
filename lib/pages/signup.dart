@@ -14,7 +14,6 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
-
   final _auth = AuthService();
 
   TextEditingController nameController = TextEditingController();
@@ -38,32 +37,24 @@ class _SignupState extends State<Signup> {
   }
 
   goToHome(BuildContext context) => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context)=> const Home())
-  );
+      context, MaterialPageRoute(builder: (context) => const Home()));
 
   goToLogin(BuildContext context) => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const Login() )
-  );
+      context, MaterialPageRoute(builder: (context) => const Login()));
 
   _signupUser() async {
-      final user = await _auth.signupUser(_email, _password);
-      print('res after signup = $user');
-      if(user){
-        print('user created successfully');
-        goToHome(context);
-      }
+    final user = await _auth.signupUser(_email, _password);
+    print('res after signup = $user');
+    if (user) {
+      print('user created successfully');
+      goToHome(context);
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: Padding(
+  Widget buildContent() {
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
-          //MediaQuery.of(context).size.width > 768
+      //MediaQuery.of(context).size.width > 768
       child: Column(children: [
         //const Spacer(),
         const SizedBox(
@@ -87,12 +78,10 @@ class _SignupState extends State<Signup> {
             border: OutlineInputBorder(),
             labelText: 'Name',
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.lightBlueAccent,
-                width: 2.0,
-              )
-            ),
-
+                borderSide: BorderSide(
+              color: Colors.lightBlueAccent,
+              width: 2.0,
+            )),
           ),
           onChanged: (newValue) {
             setState(() {
@@ -110,10 +99,9 @@ class _SignupState extends State<Signup> {
             labelText: 'Email',
             focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: Colors.lightBlueAccent,
-                  width: 2.0,
-                )
-            ),
+              color: Colors.lightBlueAccent,
+              width: 2.0,
+            )),
           ),
           onChanged: (newValue) {
             setState(() {
@@ -129,12 +117,12 @@ class _SignupState extends State<Signup> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Password',
+            hintText: 'length must be greater than or equal to 6',
             focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: Colors.lightBlueAccent,
-                  width: 2.0,
-                )
-            ),
+              color: Colors.lightBlueAccent,
+              width: 2.0,
+            )),
           ),
           onChanged: (newValue) {
             setState(() {
@@ -151,8 +139,8 @@ class _SignupState extends State<Signup> {
             isEnabled: _areAllInputsEntered(),
             pressed: () {
               _areAllInputsEntered()
-                  ? //print('name= $_name \n email= $_email \n password= $_password')
-                    _signupUser()
+                  ?
+                  _signupUser()
                   : null;
             }),
         const SizedBox(
@@ -166,7 +154,29 @@ class _SignupState extends State<Signup> {
           )
         ]),
       ]),
-    ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Center(
+      child: MediaQuery.of(context).size.width > 768
+          ? Container(
+              height: 700,
+              width: 400,
+              decoration: BoxDecoration(
+                color: Colors.lightBlue[50],
+                border: Border.all(
+                  color: Colors.lightBlueAccent, // Border color
+                  width: 2.0, // Border width
+                ),
+                borderRadius:
+                    BorderRadius.circular(10), // Optional: Rounded corners
+              ),
+              child: buildContent(),
+            )
+          : buildContent(),
+    ));
   }
 }

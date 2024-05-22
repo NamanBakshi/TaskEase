@@ -1,14 +1,16 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 import '../model/task.dart';
 
 class TodoTile extends StatelessWidget {
   final String taskName;
   final bool checked;
-  final String createdDate;
+  final Timestamp createdDate;
   final String date;
   Function(bool?)? onClick;
   Function(BuildContext)? onDelete;
@@ -83,7 +85,7 @@ class TodoTile extends StatelessWidget {
                           fontSize: 14,
                         )),
                     Text(
-                      createdDate,
+                      DateFormat('yyyy-MM-dd').format(createdDate.toDate()),
                       style: const TextStyle(
                         fontSize: 12,
                       ),
