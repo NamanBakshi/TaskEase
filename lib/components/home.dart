@@ -29,12 +29,12 @@ class _HomeState extends State<Home> {
   late Stream<QuerySnapshot>? userData;
   final _auth = FirebaseAuth.instance;
   final _userAuth = AuthService();
-  String? dueDate;
+  String dueDate=DateTime.now().toString().split(' ')[0];
+  bool enable=false;
 
   @override
   void initState() {
     super.initState();
-    // _savedData();
     _getUserDataOnLoad();
   }
 
@@ -45,18 +45,6 @@ class _HomeState extends State<Home> {
     }
     print('usersss === $userData');
 
-    // setState(() {
-    //
-    // });
-  }
-
-  _savedData() async {
-    //var tList = await LocalStorage().getBoxData() ?? [];
-    //print("tList List :: ${tList}");
-
-    // setState(() {
-    //   updatedTaskList = tList;
-    // });
   }
 
   String taskName = '';
@@ -64,12 +52,12 @@ class _HomeState extends State<Home> {
   final TextEditingController dateController = TextEditingController();
 
   bool _areAllInputsEntered() {
-    bool result=taskName.isNotEmpty && dueDate!.isNotEmpty;
-    print(' result = $result');
+    print(' result = ');
+    print(taskName.isNotEmpty);
     return taskName.isNotEmpty;
   }
 
-  addTask(String boxTitle, {Task? taskDetails, int? index, String? id}) {
+  addTask(String boxTitle, {Task? taskDetails, String? id}) {
     //print('addtASK after edit index = $index , id = $id');
     showDialog(
       context: context,
@@ -96,8 +84,10 @@ class _HomeState extends State<Home> {
                 ),
                 controller: myController,
                 onChanged: (newValue) {
+                  print('new taskname = $newValue');
                   setState(() {
                     taskName = newValue;
+                    enable= taskName.isNotEmpty;
                   });
                 },
               ),
@@ -109,21 +99,19 @@ class _HomeState extends State<Home> {
                   final selectedDate = await showDatePicker(
                     context: context,
                     initialDate: DateTime.now(),
-                    firstDate: DateTime(2024),
+                    firstDate: DateTime.now(),
                     lastDate: DateTime(2100),
                   );
-                  var splitDate = selectedDate.toString().split(' ')[0];
-                  setState(() {
-                    dateController.text = splitDate;
-                    dueDate = splitDate;
-                  });
-                  print('duedate = $dueDate');
+                  //print('type');
+                  //print(selectedDate.runtimeType);
+                    var splitDate = selectedDate.toString().split(' ')[0];
+                    setState(() {
+                      dateController.text = splitDate;
+                      dueDate = splitDate;
+                    });
+                    print('duedate = $dueDate');
+
                 },
-                // onChanged: (newValue) {
-                //   setState(() {
-                //     dueDate = newValue;
-                //   });
-                // },
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Due date',
@@ -143,11 +131,14 @@ class _HomeState extends State<Home> {
                       value: boxTitle == Constants().add
                           ? Constants().add
                           : 'Edit',
+                      //isEnabled: enable,
                       isEnabled: true,
                       pressed: boxTitle == Constants().add
                           ? onAdd
-                          : () => onEditClick(index!, id!, taskDetails!)),
-                  Button(value: 'Cancel', isEnabled: true, pressed: onCancel),
+                          : () => onEditClick(id!, taskDetails!)),
+                  Button(value: 'Cancel',
+                      isEnabled: true,
+                      pressed: onCancel),
                 ],
               ),
             ],
@@ -158,38 +149,32 @@ class _HomeState extends State<Home> {
   }
 
   onAdd() async {
-    var length = updatedTaskList?.length ?? 0;
 
-    Task newTask = Task(
-        id: (length + 1).toString(),
-        title: myController.text,
-        isChecked: false);
+    Firestore().addTask(myController.text, dateController.text).then((res) =>
+        Fluttertoast.showToast(
+            msg: "Task added successfully",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.blue,
+            textColor: Colors.white,
+            webPosition: "center",
+            fontSize: 16.0));
 
-    Firestore().addTask(myController.text,dueDate!);
-
-    // setState(() {
-    //   updatedTaskList?.add(newTask);
-    //   myController.clear();
-    // });
-
-    LocalStorage().saveTask(updatedTaskList!);
     myController.clear();
+    dateController.clear();
     Navigator.of(context).pop();
   }
 
   void onCancel() {
     myController.clear();
+    dateController.clear();
     Navigator.of(context).pop();
   }
 
   void checkBoxClicked(
       bool? val, int index, String id, Task taskDetails) async {
-    //print('index = $index');
-    //var updatedData = await LocalStorage().updateCheckbox(index);
 
-    // setState(() {
-    //   updatedTaskList = updatedData;
-    // });
     taskDetails.isChecked = !taskDetails.isChecked;
     Firestore()
         .clickOnTask(id, taskDetails)
@@ -197,34 +182,29 @@ class _HomeState extends State<Home> {
   }
 
   void onDelete(int index, String id) async {
-    //var updatedData = await LocalStorage().deleteTask(index);
-
-    // setState(() {
-    //   updatedTaskList = updatedData;
-    // });
 
     await Firestore().deleteTaskFromDb(id).then((value) =>
         Fluttertoast.showToast(
             msg: "Task deleted successfully",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 1,
+            timeInSecForIosWeb: 2,
             backgroundColor: Colors.blue,
             textColor: Colors.white,
+            webPosition: "center",
             fontSize: 16.0));
   }
 
-  void onEdit(
-      String str, int index, String id, String title, Task taskDetails) async {
+  void onEdit(String str, int index, Task taskDetails) async {
     setState(() {
-      //myController.text = updatedTaskList![index].title;
-      myController.text = title;
+      myController.text = taskDetails.title;
+      dateController.text = taskDetails.taskDueDate;
     });
 
-    addTask(str, taskDetails: taskDetails, index: index, id: id);
+    addTask(str, taskDetails: taskDetails, id: taskDetails.id);
   }
 
-  onEditClick(int index, String id, Task taskDetails) async {
+  onEditClick(String id, Task taskDetails) async {
     //print('onedit cliecked call ');
     try {
       //var tList = await LocalStorage().editTask(index, myController.text);
@@ -232,8 +212,20 @@ class _HomeState extends State<Home> {
       //   updatedTaskList = tList;
       // });
       taskDetails.title = myController.text;
+      taskDetails.taskDueDate = dateController.text;
+
       await Firestore().editTaskInDb(id, taskDetails).then((value) => {
+            Fluttertoast.showToast(
+                msg: "Task edited successfully",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.TOP,
+                timeInSecForIosWeb: 2,
+                backgroundColor: Colors.blue,
+                textColor: Colors.white,
+                webPosition: "center",
+                fontSize: 16.0),
             myController.clear(),
+            dateController.clear(),
             Navigator.of(context).pop(),
           });
     } catch (err) {
@@ -253,6 +245,7 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     myController.dispose();
+    dateController.dispose();
     super.dispose();
   }
 
@@ -307,23 +300,24 @@ class _HomeState extends State<Home> {
               );
             }
 
+            //snapshot.data!.docs.isEmpty is important
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return const Center(child: Text('No tasks pending.'));
             }
 
             var tasks;
-            List<String> taskDate = [];
-            List<String> dueDateList=[];
-
+            //List<String> taskDate = [];
             tasks = snapshot.data!.docs.map((DocumentSnapshot document) {
-              var task = document.data() as Map<String, dynamic>;
-              List<String> dateTimeParts = task['time'].split(' ');
-              taskDate.add(dateTimeParts[0]);
-              dueDateList.add(task['dueDate']);
-              print('task data - - $task');
+              // var task = document.data() as Map<String, dynamic>;
+              // List<String> dateTimeParts = task['time'].split(' ');
+              // taskDate.add(dateTimeParts[0]);
               return Task.fromJson(document.data() as Map<String, dynamic>);
-              //return document.data() as Task;
             }).toList();
+
+
+            //tasks.sort((a, b) => a.toDate().millisecondsSinceEpoch.compareTo(b.toDate().millisecondsSinceEpoch));
+            tasks.sort((a, b) => DateTime.parse(a.createdAt).millisecondsSinceEpoch.compareTo(DateTime.parse(b.createdAt).millisecondsSinceEpoch));
+            //DateTime.parse(timestampString)
 
             return ListView.builder(
                 itemCount: tasks.length,
@@ -332,13 +326,12 @@ class _HomeState extends State<Home> {
                   return TodoTile(
                     taskName: task.title,
                     checked: task.isChecked,
-                    createdDate: taskDate[index],
-                    date:dueDateList[index],
+                    createdDate: task.createdAt,
+                    date: task.taskDueDate,
                     onClick: (val) =>
                         checkBoxClicked(val, index, task.id, task),
-                    onDelete: (context) => onDelete(index, task.id),
-                    onEdit: (context) =>
-                        onEdit('Edit', index, task.id, task.title, task),
+                        onDelete: (context) => onDelete(index, task.id),
+                        onEdit: (context) => onEdit('Edit', index, task),
                   );
                 });
           }),
