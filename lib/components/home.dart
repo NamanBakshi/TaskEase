@@ -315,9 +315,9 @@ class _HomeState extends State<Home> {
             }).toList();
 
 
-            //tasks.sort((a, b) => a.toDate().millisecondsSinceEpoch.compareTo(b.toDate().millisecondsSinceEpoch));
-            tasks.sort((a, b) => DateTime.parse(a.createdAt).millisecondsSinceEpoch.compareTo(DateTime.parse(b.createdAt).millisecondsSinceEpoch));
-            //DateTime.parse(timestampString)
+            //tasks.sort((a, b) => DateTime.parse(a.createdAt.toString()).millisecondsSinceEpoch.compareTo(DateTime.parse(b.createdAt.toString()).millisecondsSinceEpoch));
+            tasks.sort((a, b) => DateTime.parse(a.taskDueDate).millisecondsSinceEpoch.compareTo(DateTime.parse(b.taskDueDate).millisecondsSinceEpoch));
+
 
             return ListView.builder(
                 itemCount: tasks.length,
